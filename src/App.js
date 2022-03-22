@@ -20,41 +20,41 @@ import {
   Button,
   Figure,
   Card,
+  Table,
 } from "react-bootstrap";
 import axios from "axios";
 
 function App() {
   const [image, setImage] = useState(true);
   const [outputImage, setOutputImage] = useState(true);
-  const [finalInputImage, setFinalInputImage] = useState(null)
-  const [finalOutputImage, setFinalOutputImage] = useState(null)
+  const [finalInputImage, setFinalInputImage] = useState(null);
+  const [finalOutputImage, setFinalOutputImage] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
   const [loadState, setLoadState] = useState(false);
   const [fusionValue, setFusionValue] = useState(0);
+  const [showTable, setShowTable] = useState(false);
   const [checkMethod, setCheckMethod] = useState({
     method1: "Method 1",
     method2: "Method 2",
+  });
+  const [imageValues, setImageValues] = useState({
+    entropy: {
+      ip_ent: 0,
+      op_ent: 0,
+    },
+    brisque: {
+      ip_brisque: 0,
+      op_brisque: 0
+    },
+    // psnr: 0
   });
 
   // to upload image
   const UploadImage = (e) => {
     setSelectedImage(e.target.files[0]);
-    let input = document.getElementById("input-image")
 
-    const formData = new FormData();
-    setFinalInputImage(input.files[0]);
-    formData.append("image", input.files[0])
-    axios.post("http://localhost:5000/enhance", formData)
-    .then(res=> {
-      console.log(res);
-					let bytestring = res.data.status
-          let image = bytestring.split('\'')[1]
-          setFinalOutputImage('data:image/jpeg;base64,'+image)
-          setImage(false);
-					// in.attr('src' , 'data:image/jpeg;base64,'+image)
-    })
-    .catch(err=> console.log(err))
-   
+    setFinalInputImage(e.target.files[0]);
+    setImage(false);
   };
 
   // to select value from dropdown
@@ -66,7 +66,35 @@ function App() {
 
   //load output image
   const LoadImageFunction = () => {
-    setLoadState(false);
+    const formData = new FormData();
+    let input = document.getElementById("input-image");
+    formData.append("image", input.files[0]);
+    formData.append("met1", checkMethod.method1);
+    formData.append("met2", checkMethod.method2);
+    formData.append("fusion_params", fusionValue);
+    axios
+      .post("http://localhost:5000/enhance", formData)
+      .then((res) => {
+        console.log(res);
+        let bytestring = res.data.status;
+        let image = bytestring.split("'")[1];
+        setFinalOutputImage("data:image/png;base64," + image);
+        setImageValues({
+          entropy: {
+            ip_ent: res.data.ip_ent,
+            op_ent: res.data.op_ent,
+          },
+          brisque: {
+            ip_brisque: res.data.ip_brisque,
+            op_brisque: res.data.op_brisque
+          },
+          // psnr: res.data.psnr
+        });
+        setLoadState(false);
+        // in.attr('src' , 'data:image/jpeg;base64,'+image)
+      })
+      .catch((err) => console.log(err));
+    
   };
 
   useEffect(() => {
@@ -78,9 +106,9 @@ function App() {
     //   .catch((error) => {
     //     console.log(error);
     //   });
-      if (selectedImage) {
-        setFinalInputImage(URL.createObjectURL(selectedImage));
-      }    
+    if (selectedImage) {
+      setFinalInputImage(URL.createObjectURL(selectedImage));
+    }
   }, [selectedImage]);
 
   return (
@@ -145,7 +173,9 @@ function App() {
 
                         <Dropdown.Menu variant="dark">
                           <Dropdown.Item eventKey="BBHE">BBHE</Dropdown.Item>
-                          <Dropdown.Item eventKey="BBHE">BPHEME</Dropdown.Item>
+                          <Dropdown.Item eventKey="BPHEME">
+                            BPHEME
+                          </Dropdown.Item>
                           <Dropdown.Item eventKey="DSIHE">DSIHE</Dropdown.Item>
                           <Dropdown.Item eventKey="MMBEBHE">
                             MMBEBHE
@@ -169,7 +199,9 @@ function App() {
 
                         <Dropdown.Menu variant="dark">
                           <Dropdown.Item eventKey="BBHE">BBHE</Dropdown.Item>
-                          <Dropdown.Item eventKey="BBHE">BPHEME</Dropdown.Item>
+                          <Dropdown.Item eventKey="BPHEME">
+                            BPHEME
+                          </Dropdown.Item>
                           <Dropdown.Item eventKey="DSIHE">DSIHE</Dropdown.Item>
                           <Dropdown.Item eventKey="MMBEBHE">
                             MMBEBHE
@@ -214,6 +246,7 @@ function App() {
                   background: "#25D366",
                   border: "none",
                 }}
+                onClick={() => setShowTable(true)}
               >
                 Get Report
               </Button>
@@ -261,7 +294,7 @@ function App() {
                     else {
                       setOutputImage(false);
                       setLoadState(true);
-                      setTimeout(LoadImageFunction, 5000);
+                      LoadImageFunction();
                     }
                   }}
                 >
@@ -278,10 +311,14 @@ function App() {
                     height={outputImage || loadState ? 270 : 450}
                     alt="171x180"
                     src={
-                      outputImage ? finalImage : loadState ? loadImage : finalOutputImage
+                      outputImage
+                        ? finalImage
+                        : loadState
+                        ? loadImage
+                        : finalOutputImage
                     }
                   />
-                  <Figure.Caption>
+                  <Figure.Caption className="text-black">
                     {loadState
                       ? "Click the Proceed Button"
                       : `Fusion of ${checkMethod.method1} - ${checkMethod.method2}`}
@@ -291,11 +328,43 @@ function App() {
             </Col>
           </Row>
         </Container>
+        {showTable ? (
+          <Container style={{marginTop: "2rem"}}>
+            <div style={{margin: "2rem", fontSize: "20px", fontWeight: "bold"}}>Summary</div>
+            <Table striped bordered hover>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Input Image</th>
+                  <th>Output Image</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Entropy</td>
+                  <td>{imageValues.entropy.ip_ent.toFixed(2)}</td>
+                  <td>{imageValues.entropy.op_ent.toFixed(2)}</td>
+                </tr>
+                <tr>
+                  <td>Brisque</td>
+                  <td>{imageValues.brisque.ip_brisque.toFixed(2)}</td>
+                  <td>{imageValues.brisque.op_brisque.toFixed(2)}</td>
+                </tr>
+                {/* <tr>
+                  <td>PSNR</td>
+                  <td>{imageValues.brisque.psnr}</td>
+                </tr> */}
+              </tbody>
+            </Table>
+          </Container>
+        ) : null}
+
         <Card
           bg="dark"
           style={{
-            position: "absolute",
-            bottom: "0",
+            // position: "absolute",
+            // bottom: "0",
+            marginTop: "5rem",
             width: "-webkit-fill-available",
             height: "70px",
             justifyContent: "center",
