@@ -331,7 +331,7 @@ function App() {
         {showTable ? (
           <Container style={{marginTop: "2rem"}}>
             <div style={{margin: "2rem", fontSize: "20px", fontWeight: "bold"}}>Summary</div>
-            <Table striped bordered hover>
+            <Table striped bordered hover style={{fontSize: "20px"}}>
               <thead>
                 <tr>
                   <th>#</th>
