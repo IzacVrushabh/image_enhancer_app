@@ -334,9 +334,10 @@ function App() {
             <Table striped bordered hover style={{fontSize: "20px"}}>
               <thead>
                 <tr>
-                  <th>#</th>
+                  <th>Parameters</th>
                   <th>Input Image</th>
                   <th>Output Image</th>
+                  <th>Difference</th>
                 </tr>
               </thead>
               <tbody>
@@ -344,11 +345,13 @@ function App() {
                   <td>Entropy</td>
                   <td>{imageValues.entropy.ip_ent.toFixed(2)}</td>
                   <td>{imageValues.entropy.op_ent.toFixed(2)}</td>
+                  <td>{(Math.abs(imageValues.entropy.op_ent - imageValues.entropy.ip_ent)).toFixed(2)}</td>
                 </tr>
                 <tr>
                   <td>Brisque</td>
                   <td>{imageValues.brisque.ip_brisque.toFixed(2)}</td>
                   <td>{imageValues.brisque.op_brisque.toFixed(2)}</td>
+                  <td>{(Math.abs(imageValues.brisque.op_brisque - imageValues.brisque.ip_brisque)).toFixed(2)}</td>
                 </tr>
                 {/* <tr>
                   <td>PSNR</td>
