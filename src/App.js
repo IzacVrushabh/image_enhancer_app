@@ -23,6 +23,12 @@ import {
   Table,
 } from "react-bootstrap";
 import axios from "axios";
+import Footer from "./components/Footer";
+import ShowResult from "./components/ShowResult";
+// import jsPDF from "jspdf";
+// import pdfMake from "pdfmake";
+// import pdfFonts from "pdfmake/build/vfs_fonts";
+// import htmlToPdfmake from "html-to-pdfmake";
 
 function App() {
   const [image, setImage] = useState(true);
@@ -44,10 +50,24 @@ function App() {
     },
     brisque: {
       ip_brisque: 0,
-      op_brisque: 0
+      op_brisque: 0,
     },
     // psnr: 0
   });
+
+  useEffect(() => {
+    // axios
+    //   .get("http://localhost:5000/get_data")
+    //   .then((result) => {
+    //     console.log(result);
+    //   })
+    //   .catch((error) => {
+    //     console.log(error);
+    //   });
+    if (selectedImage) {
+      setFinalInputImage(URL.createObjectURL(selectedImage));
+    }
+  }, [selectedImage]);
 
   // to upload image
   const UploadImage = (e) => {
@@ -86,7 +106,7 @@ function App() {
           },
           brisque: {
             ip_brisque: res.data.ip_brisque,
-            op_brisque: res.data.op_brisque
+            op_brisque: res.data.op_brisque,
           },
           // psnr: res.data.psnr
         });
@@ -94,22 +114,7 @@ function App() {
         // in.attr('src' , 'data:image/jpeg;base64,'+image)
       })
       .catch((err) => console.log(err));
-    
   };
-
-  useEffect(() => {
-    // axios
-    //   .get("http://localhost:5000/get_data")
-    //   .then((result) => {
-    //     console.log(result);
-    //   })
-    //   .catch((error) => {
-    //     console.log(error);
-    //   });
-    if (selectedImage) {
-      setFinalInputImage(URL.createObjectURL(selectedImage));
-    }
-  }, [selectedImage]);
 
   return (
     <>
@@ -246,9 +251,11 @@ function App() {
                   background: "#25D366",
                   border: "none",
                 }}
-                onClick={() => setShowTable(true)}
+                onClick={() => {
+                  setShowTable(true);
+                }}
               >
-                Get Report
+                Show Result
               </Button>
             </Navbar.Collapse>
           </Container>
@@ -329,56 +336,23 @@ function App() {
           </Row>
         </Container>
         {showTable ? (
-          <Container style={{marginTop: "2rem"}}>
-            <div style={{margin: "2rem", fontSize: "20px", fontWeight: "bold"}}>Summary</div>
-            <Table striped bordered hover style={{fontSize: "20px"}}>
-              <thead>
-                <tr>
-                  <th>Parameters</th>
-                  <th>Input Image</th>
-                  <th>Output Image</th>
-                  <th>Difference</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <td>Entropy</td>
-                  <td>{imageValues.entropy.ip_ent.toFixed(2)}</td>
-                  <td>{imageValues.entropy.op_ent.toFixed(2)}</td>
-                  <td>{(Math.abs(imageValues.entropy.op_ent - imageValues.entropy.ip_ent)).toFixed(2)}</td>
-                </tr>
-                <tr>
-                  <td>Brisque</td>
-                  <td>{imageValues.brisque.ip_brisque.toFixed(2)}</td>
-                  <td>{imageValues.brisque.op_brisque.toFixed(2)}</td>
-                  <td>{(Math.abs(imageValues.brisque.op_brisque - imageValues.brisque.ip_brisque)).toFixed(2)}</td>
-                </tr>
-                {/* <tr>
-                  <td>PSNR</td>
-                  <td>{imageValues.brisque.psnr}</td>
-                </tr> */}
-              </tbody>
-            </Table>
-          </Container>
+          <>
+            <ShowResult
+              ip_brisque={imageValues.brisque.ip_brisque}
+              op_brisque={imageValues.brisque.op_brisque}
+              ip_entropy={imageValues.entropy.ip_ent}
+              op_entropy={imageValues.entropy.op_ent}
+              ip_image={finalInputImage}
+              op_image={finalOutputImage}
+              method_1={checkMethod.method1}
+              method_2={checkMethod.method2}
+              p_value={parseFloat(fusionValue)}
+              q_value={1 - parseFloat(fusionValue)}
+            />
+          </>
         ) : null}
 
-        <Card
-          bg="dark"
-          style={{
-            // position: "absolute",
-            // bottom: "0",
-            marginTop: "5rem",
-            width: "-webkit-fill-available",
-            height: "70px",
-            justifyContent: "center",
-          }}
-        >
-          <Card.Footer className="text-muted">
-            <div style={{ fontWeight: "bolder", color: "white" }}>
-              Made by : Vrushabh Kulye , Mallikarjun Ople , Vaibhav Mahindra
-            </div>
-          </Card.Footer>
-        </Card>
+        <Footer />
       </div>
     </>
   );
